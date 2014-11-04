@@ -1,42 +1,58 @@
-# Welcome
+# Short intro
 
-Welcome to your wiki! This is the default page we've installed for your convenience. Go ahead and edit it.
+Since I (Ivan Aleksandrovich "OCTAGRAM" Levashew, 六医王) usually have to do lots of homework instead of something really useful, progress on SOM-related projects is happening quite slow, and this project is not an exception. In Russian educational system not being a camel and proving that you are not a camel are two different things. So while I'm stuck in humanmill proving that I know databases to our bureaucratic machine in the same way as if I was learning them from scratch, with every intermediate step being well documented, without any option to shorten amount of work, I decided to at least spend some time what is it all about.
 
-## Wiki features
+## What are SOM and somFree?
 
-This wiki uses the [Markdown](http://daringfireball.net/projects/markdown/) syntax.
+There were times dating back to DOS era when different teams could write in different programming languages (Pascal, Assembler, Fortran, C) and then link everything together. Choosing programming language was a matter of taste and another considerations. Then object-oriented programming emerged, complexity raised, and programming libraries virtually dictate in what programming language should you use them. You can't easily write PHP module in Delphi or use FireMonkey from Ada. Both COM and SOM (and also XPCOM, UNO, GObject, libobjc) aim to bridge the gap and restore the lost paradise. SOM is not widely known compared to other technologies, but it is superior from several points of view.
 
-The wiki itself is actually a mercurial repository, which means you can clone it, edit it locally/offline, add images or any other file type, and push it back to us. It will be live immediately.
+SOM was mostly known on OS/2, z/OS, Mac OS Classic, AIX, and is still mostly associated with OS/2. However, IBM also had version for Windows. You can grab it here: https://bitbucket.org/OCTAGRAM/somobjects/ in Downloads section. It had a serious problem with Data Execution Prevention enabled on some version of Windows (e. g. Win2003), so I recommend using som301nt.7z, in which this problem is fixed. SOM-Delphi is currently being tested against this patched SOMObjects DTK.
 
-Go ahead and try:
+IBM SOM is closed-source, so it was cloned at least 2 times: NOM and somFree. NOM is not binary compatible with SOM, which is not a big problem, but it also forces using Boehm Garbage Collector which I dislike very much. Before Mac OS X 10.4 there was no garbage collection in Objective-C, and in Mac OS X 10.5 Objective-C 2.0 was introduced, where libraries could be optionally GC-enabled. Any single GC-enabled libraries forces using GC over all process. Hopefully GC-kiddies did no do big damage, and developers' community generally preferred not to use GC. And Apple also did a wise thing by introducing ARC, automatic reference counting, similar to interface reference handling in Delphi, that maid programming with RC more comfortable. I like that RC won in Apple ecosystem. Despite all the GC-kiddies who got COM wrong or who thinks that closures are impossible without GC, or that XML is impossible to represent without GC, we can see Apple and Delphi 2009+ ecosystems with closures (blocks) and XML and everything else, and no GC. So I don't even want to mess with NOM since it forces GC no matter if it's needed or not.
 
-```
-$ hg clone https://OCTAGRAM@bitbucket.org/OCTAGRAM/som-delphi/wiki
-```
+somFree, on the other hand, aims to be binary compatible. So it's like SOM, but open source and ported to lots of platforms like Linux and Mac OS X.
 
-Wiki pages are normal files, with the .md extension. You can edit them locally, as well as creating new ones.
+## SOM, somFree and Delphi
 
-## Syntax highlighting
+Now you might have a question why do I mess with closed source 16-years-old IBM SOM when there is promising somFree.
 
+The thing is, somFree is missing an essential component, Emitter Framework and all the corresponding infrastructure. It is in fact is implemented in pure C++ as opposed to using SOMObjects due to bootstrapping problem as somFree developer said. It can be written in the future, though.
 
-You can also highlight snippets of text (we use the excellent [Pygments][] library).
+The main utility in SOM is SOM Compiler (originally sc.exe, but this name conflicts with sc.exe in modern Windows). It takes .idl, parses it and do something with it, whatever is programmed in emitter requested. Some emitters output C headers, some output .def and .imp for DLL compilation, some aid implementing custom classes, some edit Implementation Repository file (som.ir), some do checks. For every new programming language in order to use SOM one might need to write several emitters (interpreted languages can use reflection abilities of SOM).
 
-[Pygments]: http://pygments.org/
+## Full bootstrap
 
+There is a problem with unpopular technologies is that it is hard to learn them. There are lots of documentation about SOM, but I can't say they allow me learn SOM very well. This is the reason why I decided to do a full bootstrap, implement Delphi emitters in Delphi.
 
-Here's an example of some Python code:
+Bootstrapping is hard because in order to write Delphi emitters in Delphi I would normally use Delphi emitter, and there is none, I don't even have a full picture of mapping different SOM features to Delphi, so I did it by hand. And while I was doing it, my understanding of SOM internals improved.
 
-```
-#!python
+## Current state of project
 
-def wiki_rocks(text):
-    formatter = lambda t: "funky"+t
-    return formatter(text)
-```
+I was able to create SOMObject (base for other objects, similar to TObject in Delphi or IUnknown in COM) in different ways, either in heap or in-place. In-place construction (somRenew) constructs object in a specified memory location. Before doing so one needs to query class object for size of its object instances. On 32-bit platform SOMObject has size of 4 bytes. VMT seems to be present in every object, but reference counter is not. Despite reference counter field missing in SOMObject, there are hidden methods duplicate() and release(). I have also asked both instances of SOMObject what is the name of their class, and they replied that their class is called "SOMObject". According to documentation, the caller owns result, so I have to release memory using SOMFree() procedure. I did it, and it didn't crash. It looks like I was doing everything right.
 
+I have created by hand bindings for Emitter Framework. Lots of dull work, but now it's done. But not tested. Everything is close to be ready to write first emitters. 
 
-You can check out the source of this page to see how that's done, and make sure to bookmark [the vast library of Pygment lexers][lexers], we accept the 'short name' or the 'mimetype' of anything in there.
-[lexers]: http://pygments.org/docs/lexers/
+Writing emitter means mostly using another classes, and I have maid bindings for them, but it also means that I must create and implement at least 1 own descendant class and wrap it into DLL. It can be done, but I have to spend some time thinking how to do it better.
 
+Then most fun begins. I will have to design how to compile IDL into thin Delphi headers. I will try to process different .idls and see what problems will occur.
 
-Have fun!
+## Impedance mismatch
+
+SOMObjects are supposed to bridge different languages, but they are itself a language that can have mismatches with other languages. I think it will be a good idea to define some additional rules that should not be violated in order to not create problems for emitters. However, I see that even kernel stuff IDL violates them, so there should be a fix for kernel objects, and newly created objects should avoid violations.
+
+In particular:
+* Delphi, Ada and so on have a strict mapping of packages (units) to filenames. C++ and CORBA (SOM is based on CORBA) have another system. Developer includes files, and every file can define new namespaces and can append anything to any namespace. It would be beautiful and self-obvious to map CORBA namespaces to units or packages, but then it should not be allowed for any IDL file to append anything to foreign namespace. Fallback mapping should be provided on demand, but it won't be so beautiful.
+* In CORBA and C++ it is possible to define a class name and say nothing more about it at all. It is possible to have pointers on such class instance, but not possible to invoke methods or query fields. For instance, SOMClassMgrObject (which is one of essential kernel objects!) has a method returning an object of class Repository, but no one knows what is Repository class exactly except that it is probably a descendant of SOMObject. If one just includes somcm.idl and follows every include, one won't find anything about Repository. One needs to know that Repository is defined in another not logically related file. In C++, when one does not need to work with Interface Repository, one can just not call this method. C++ rules allow it to be defined. And if one wants to work with this class, one includes one more file, and mysterious Repository becomes declared and usable. It is not possible to punk with Delphi and Ada compiler this way. SOMClassMgr bindings in these languages must return something known. So emitter have to either emit SOMObject pointer result or be able to locate Repository and every other class. There should be no unknown classes.
+* In C and C++ one can do a single include, and it can include something else by chain. In the end one gets lots of names in namespaces. Delphi and Ada does not work this way, but for symmetry it might make sense to contain multiple bindings in a single file. Once again, then we need to know how to group IDLs and make it just work.
+
+These are the problems I've met so far. I want Delphi emitter (and Ada emitter in the future) to do the best what they can, but it is a trial-and-error work. I need to write something to start from. Then I can experiment with IDLs. I can try to create bindings for complete SOM 3.0 DTK. I can try to create bindings for WPS. The fact that WPS is only for OS/2 should not be a problem for testing emitter. There are also OpenDoc IDLs.
+
+## Possible future work
+* Trying to use somFree as opposed to IBM SOM
+* Ada emitter in Ada
+* Trying to run Windows version of somFree on Wine as opposed to using Linux version of somFree
+* Same for Mac OS X
+* Creating some kind of standard library that is compiled natively on different platforms, but thanks to somFree can be called from a single executable
+* Cut WinAPI out of Wine as much as possible forcing to use somFree for file access and so on.
+* This should become "Somatic Runtime", it should be cross-platform like Java, but natively compiled. x86 and x64 PE/COFF executables should run on every x86 and x64 based OS the same way as Java applications do. Having several versions of the same application for the same CPU architecture, but for Windows, Linux, Mac OS X, Solaris, FreeBSD is stupid, and in practice unpopular OSes lack programs, or they cannot be compiled without modifications. Only Java and Python work well everywhere. But we don't want to live in world full of Java and Python, right? So let it be clear: one architecture - one binary. End of story. Linux was hard to emulate on Windows, I don't know good user-level emulator. Cywin requires recompilation, and it's damn fork() does not work well on Windows Vista and higher due to randomization of address space. Java, on the other hand, works well in Windows Vista. You wonder why? Because there is no damn fork() in Java. And if you think that's a problem of Windows, let me give you one more problem. Run Linux program on Mac OS X without full-blown virtual machine. I know there is Linux emulator in FreeBSD, and there are Containers in Solaris allowing to run Linux binaries. While Linux emulation in FreeBSD is excellent example of what can be helpful in creating Somatic Runtime, creating container in Solaris requires work; and user level emulation of Linux in Mac OS X is not done at all.  At the same time we have Wine for every of these platforms, so it is the only solution for now. arm-hf and mipsel targets, however, might not be based on Wine.
+* Somatic Runtime should be usable from different programming languages, but there should be a programming language best suited for it. For instance, hypothetical Delphi with Somatic Extensions might have some tools to consume and produce SOM classes, but it can't easily adopt several restrictions required in order to maintain release-to-release binary compatibility. If you know Delphi well, you should be aware that .dcu from one version of Delphi is impossible to use from another version of Delphi. And also change in one .dcu requires recompilation of everything that is dependent on it. Ada and C++ have similar problems, named "fragile base class problem". This is what SOM solves. Programming languages can easily adopt extensions, but adopting restrictions is often impossible, there will be lots of code that cannot be compiled. If we don't have a code that can be compiled with these new restrictions, it makes sense to have another language, let it be named Somatic Pascal, designed with SOM in mind from the very beginning.
