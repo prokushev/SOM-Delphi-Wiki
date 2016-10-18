@@ -1,6 +1,21 @@
-# Short intro
+# Project status and description
 
-Since I (Ivan Aleksandrovich "OCTAGRAM" Levashew, 卜根) usually have to do lots of homework instead of something really useful, progress on SOM-related projects is happening quite slow, and this project is not an exception. In Russian educational system not being a camel and proving that you are not a camel are two different things. So while I'm stuck in humanmill proving that I know databases to our bureaucratic machine in the same way as if I was learning them from scratch, with every intermediate step being well documented, without any option to shorten amount of work, I decided to at least spend some time what is it all about.
+Successful SOMObject and SOMClass invocations from Delphi. Working manual(!!!) Delphi bindings for Emitter Framework. Working emitter written in Delphi.
+
+Failed to do nice Delphi bindings using Emitter Framework. CORBA has "features" like unresolved forward interface declaration and open namespaces that just don't fit into Delphi way. Nice Delphi bindings require all information in one place, but SOM compiler runs emitter independently for every IDL, so all efforts to make manual bindings for Emitter Framework are wasted. We can't make Delphi bindings generator using Emitter Framework. Instead, we need to make yet another manual bindings for SOM IR. And finally we will be able to produce nice Delphi bindings from SOM.IR just like TLIBIMP.EXE converts .TLB to .PAS.
+
+Also, project targets SOM 3.0, but should be retargeted to SOM 2.1 and somFree eventually. somFree had no Emitter Framework, and that's why it was out of scope until working Delphi emitter to appear, but since it became known that it's so hard to make use of Emitter Framework and we should stick to SOM.IR instead, this is not a blocker anymore.
+
+Progress was slow because I was busy at university. In summer 2016 I have graduated. In inception project was aimed at SOM 3.0 support since it looked like the best thing and it was the only thing for Windows. Since then other things were discovered:
+1. Patch 3.5.9 for VisualAge C++ for Windows containing full SOM 2.1
+2. The same patch (found on IBM FTP) also contains enough files to run DTC C++
+3. OpenDoc for Windows with ComponentGlue works with SOM 2.1, but not SOM 3.0
+
+So it makes sense to downgrade project from SOM 3.0 to SOM 2.1 eventually. We'll get DirectToSOM C++ and OLE Automation this way.
+
+After all I have decided to make another object model like SOM from scratch instead of using somFree. The object model itself rocks, but multiple minor features are crying for update. And since there is little point in being compatible with the 20-years old SOM, where most compiled libraries don't even work on modern OSes, we could restart with something modern.
+
+Get rid of 1-byte strings and start with 4-byte ones from the beginning just like COM started with 2-byte ones. Get ARC just like in modern Objective-C. Use something based on WebSockets for interop as opposed to IIOP over raw sockets. That's most important changes I would like to make to object model.
 
 ## What are SOM and somFree?
 
