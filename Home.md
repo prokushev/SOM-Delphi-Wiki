@@ -7,6 +7,7 @@ Failed to do nice Delphi bindings using Emitter Framework. CORBA has "features" 
 Also, project targets SOM 3.0, but should be retargeted to SOM 2.1 and somFree eventually. somFree had no Emitter Framework, and that's why it was out of scope until working Delphi emitter to appear, but since it became known that it's so hard to make use of Emitter Framework and we should stick to SOM.IR instead, this is not a blocker anymore.
 
 Progress was slow because I was busy at university. In summer 2016 I have graduated. In inception project was aimed at SOM 3.0 support since it looked like the best thing and it was the only thing for Windows. Since then other things were discovered:
+
 1. Patch 3.5.9 for VisualAge C++ for Windows containing full SOM 2.1
 2. The same patch (found on IBM FTP) also contains enough files to run DTC C++
 3. OpenDoc for Windows with ComponentGlue works with SOM 2.1, but not SOM 3.0
