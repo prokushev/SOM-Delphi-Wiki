@@ -42,16 +42,6 @@ There is a problem with unpopular technologies is that it is hard to learn them.
 
 Bootstrapping is hard because in order to write Delphi emitters in Delphi I would normally use Delphi emitter, and there is none, I don't even have a full picture of mapping different SOM features to Delphi, so I did it by hand. And while I was doing it, my understanding of SOM internals improved.
 
-## Current state of project
-
-I was able to create SOMObject (base for other objects, similar to TObject in Delphi or IUnknown in COM) in different ways, either in heap or in-place. In-place construction (somRenew) constructs object in a specified memory location. Before doing so one needs to query class object for size of its object instances. On 32-bit platform SOMObject has size of 4 bytes. VMT seems to be present in every object, but reference counter is not. Despite reference counter field missing in SOMObject, there are hidden methods duplicate() and release(). I have also asked both instances of SOMObject what is the name of their class, and they replied that their class is called "SOMObject". According to documentation, the caller owns result, so I have to release memory using SOMFree() procedure. I did it, and it didn't crash. It looks like I was doing everything right.
-
-I have created by hand bindings for Emitter Framework. Lots of dull work, but now it's done. But not tested. Everything is close to be ready to write first emitters. 
-
-Writing emitter means mostly using another classes, and I have made bindings for them, but it also means that I must create and implement at least 1 own descendant class and wrap it into DLL. It can be done, but I have to spend some time thinking how to do it better.
-
-Then most fun begins. I will have to design how to compile IDL into thin Delphi headers. I will try to process different .idls and see what problems will occur.
-
 ## Impedance mismatch
 
 SOMObjects are supposed to bridge different languages, but they are itself a language that can have mismatches with other languages. I think it will be a good idea to define some additional rules that should not be violated in order to not create problems for emitters. However, I see that even kernel stuff IDL violates them, so there should be a fix for kernel objects, and newly created objects should avoid violations.
