@@ -12,7 +12,7 @@
 
 ## Amount of information ##
 
-* Emitter Framework: Limited by what is reachable from processed IDL and included ones. Unresolved forward class declarations are possible. For instance, ::SOMClassMgr::somInterfaceRepository method returns ::Repository object reference, but somcm.idl does not include repostry.idl. Emitters like "imod" collecting information from several IDLs at once have to incrementally edit output file. They put signatures into text file to locate where to append new strings. Incremental updates of text files is hard to implement in more complex cases.
+* Emitter Framework: Limited by what is reachable from processed IDL and included ones. Unresolved forward class declarations are possible. For instance, ::SOMClassMgr::somInterfaceRepository method returns ::Repository object reference, but somcm.idl does not include repostry.idl. Emitters like "imod" collecting information from several IDLs at once have to incrementally edit output file. They put signatures into text file to locate where to append new strings.
 * Interface Repository Framework: Contains information gathered from multiple IDLs in one place. No unresolved forward declarations allowed.
 
 ## Information precision ##
@@ -29,3 +29,6 @@
 
 * Emitter Framework: 22 classes: SOMTAttributeEntryC, SOMTBaseClassEntryC, SOMTClassEntryC, SOMTCommonEntryC, SOMTConstEntryC, SOMTDataEntryC, SOMTEmitC, SOMTEntryC, SOMTEnumEntryC, SOMTEnumNameEntryC, SOMTTemplateOutputC, SOMTMetaClassEntryC, SOMTMethodEntryC, SOMTModuleEntryC, SOMTParameterEntryC, SOMTPassthruEntryC, SOMTSequenceEntryC, SOMTStringEntryC, SOMTStructEntryC, SOMTTypedefEntryC, SOMTUnionEntryC, SOMTUserDefinedTypeEntryC.
 * Interface Repository Framework: 11 classes + 1 pseudoclass: AttributeDef, ConstantDef, Contained, Container, ExceptionDef, InterfaceDef, ModuleDef, OperationDef, ParameterDef, Repository, TypeDef; and TypeCode pseudoclass.
+
+## Summary ##
+Incremental updates of text files is hard to implement in complex cases. IR to Delphi importer is complex enough. It defines pointers types, sequences and arrays on demand using several passes. In order to do this it must keep track of the already defined types. This would be hard (yet possible) to reimplement in incremental text editing fashion and even more hard to update. That is troublesome to develop from scratch. C and C++ emitters put tons of macros and this way offload their job to C(C++) preprocessor. Also, unresolved forward references in SOM map to #define in C and unresolved class references in C++, so it is not a problem in these languages, but a problem in other ones. So Emitter Framework is good when stateless processing is required. IRF is good when whole picture is required, but it for no good reason lacks some information.
