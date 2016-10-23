@@ -12,8 +12,8 @@
 
 ## Amount of information ##
 
-* Emitter Framework: Limited by what is reachable from processed IDL and included ones. Unresolved forward class declarations are possible. For instance, ::SOMClassMgr::somInterfaceRepository method returns ::Repository object reference, but somcm.idl does not include repostry.idl.
-* Interface Repository Framework: Contains information gathered from multiple IDLs in one place. No unresolved forward class declarations allowed.
+* Emitter Framework: Limited by what is reachable from processed IDL and included ones. Unresolved forward class declarations are possible. For instance, ::SOMClassMgr::somInterfaceRepository method returns ::Repository object reference, but somcm.idl does not include repostry.idl. Emitters like "imod" collecting information from several IDLs at once have to incrementally edit output file. They put signatures into text file to locate where to append new strings. Incremental updates of text files is hard to implement in more complex cases.
+* Interface Repository Framework: Contains information gathered from multiple IDLs in one place. No unresolved forward declarations allowed.
 
 ## Information precision ##
 
