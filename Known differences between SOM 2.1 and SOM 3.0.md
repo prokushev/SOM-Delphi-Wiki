@@ -69,7 +69,7 @@ typedef enum completion_status {YES, NO, MAYBE,
 
 As soon as MSVC compiler is used for SOM 2.1 samples, the enum is 4 bytes and consistent with SOM DLL ABI, but VAC compiler is supposedly broken. /Sp1 should make the structure Environment packed, change size and offsets in Environment. That makes it harder to verify assumptions about ABI. The first option is IDA, it unveils how do original DLLs work with data. The second option is to construct custom tk_struct TypeCodes and check tcSize on them.
 
-Also, IBM VisualAge C++ v3.5 has DirectToSOM sample, and it has independent flags:
+Also, IBM VisualAge for C++ v3.5 has DirectToSOM sample, and it has independent flags:
 
 DEBUGFLAGS=/Ti /O- /Os-  
 BROWSEFLAGS=/Fb  
@@ -77,6 +77,28 @@ PERFLAGS=/Gh
 CPPFLAGS=$(DEBUGFLAGS) $(BROWSEFLAGS) $(PERFLAGS)  
 
 Note that "/Sp1 Packing of data items" is not present, and so is "/Su" for enum sizes. IDA shows that SOM_CreateLocalEnvironment() macro in xhmain.cpp expands into SOMCalloc for 16 bytes. So enum size might be 1 here, but aligned pointers after "exception_type" expand this structure into 16-byte one. Unfortunatelly, xhmain.cpp does not check __SOMEnv->_major.
+
+Also, IBM VisualAge for C++ v3.5 has some kind of OR/M in SOM sample (IBMCPPW\SAMPLES\database\stocksom\CLIENT.CPP). It has yet another flags:  
+icc.exe /Tdp /Sn /Gh /Ti /Gm /Gd /I. /Fb /Fo"%|dpfF.obj" /C .\prclist.cpp
+
+Interesting to note, there is also no /Sp1 here. And also no "/Su". IDA shows that SOM.DLL clearly expects Environment._major to be 4 byte. Happily for us, this sample has exception handling code, and we can check our expectations:
+
+
+```
+#!assembler
+
+txt0:00445E7C                 xor     eax, eax
+txt0:00445E7E                 mov     al, [ecx]
+txt0:00445E80                 cmp     eax, 2
+txt0:00445E83                 jz      short loc_445E97
+txt0:00445E85                 cmp     eax, 1
+txt0:00445E88                 jz      short loc_445EC0
+txt0:00445E8A                 test    eax, eax
+txt0:00445E8C                 jz      loc_445FDA
+
+```
+
+Gotcha! So in SOM 2.1 ABI enums (not only SOM enums, but system ones) must be 4 bytes because Microsoft C compiler was used to compile SOM 2.1, and it is supposed to be frozen afterwards. However, VisualAge C++ samples never use /Su compiler option to make their enums 4 bytes. They have seemingly got strange errors, but tried to cure them with alignment option as opposed to enum options. So far, there can be another strange errors. Wrt environment structure it is being initialized with zeroes, so there should be no problem. No matter if you read bytes or double words, you get the same result. But in some other circumstances (like emitters) one side might write byte and another one might read double word and get garbage.
 
 And the final test is to use TypeCode_size on hand-made types:
 
@@ -131,4 +153,4 @@ Test_3 size: 12
 
 ```
 
-So, clearly, that's not just IBM developers mishandled compiler flags. That's indeed different ABI. But the issue with mishandled compiler flags is also present.
+So, clearly, that's not just IBM developers mishandled compiler flags. That's indeed different ABI in SOM 2.1 and SOM 3.0. But the issue with mishandled compiler flags is also present.
