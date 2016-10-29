@@ -106,35 +106,33 @@ And the final test is to use TypeCode_size on hand-made types:
 ```
 #!delphi
 
-function TypeCodeNew(tag: TCKind): TypeCode; cdecl; varargs; external 'somtc.dll' name 'tcNew';
-
 procedure TestAlignmentAndSize;
 var
   MyTC: TypeCode;
 begin
-  MyTC := TypeCodeNew(tk_struct, 'Test_1',
-                        'Byte', TypeCodeNew(tk_octet),
-                        'Integer', TypeCodeNew(tk_long),
-                      nil);
+  MyTC := TypeCode.Create(tk_struct, ['Test_1',
+                            'VByte', TypeCode.Create(tk_octet),
+                            'VInteger', TypeCode.Create(tk_long)
+                          ]);
   WriteLn('Test_1 size: ', MyTC.Size);
   MyTC.Free;
-  MyTC := TypeCodeNew(tk_struct, 'Test_2',
-                        'Byte', TypeCodeNew(tk_octet),
-                        'Subrecord', TypeCodeNew(tk_struct, 'Test_1',
-                          'Byte', TypeCodeNew(tk_octet),
-                          'Integer', TypeCodeNew(tk_long),
-                        nil),
-                      nil);
+  MyTC := TypeCode.Create(tk_struct, ['Test_2',
+                            'VByte', TypeCode.Create(tk_octet),
+                            'VSubrecord', TypeCode.Create(tk_struct, ['Test_1',
+                              'VByte', TypeCode.Create(tk_octet),
+                              'VInteger', TypeCode.Create(tk_long)
+                            ])
+                          ]);
   WriteLn('Test_2 size: ', MyTC.Size);
   MyTC.Free;
-  MyTC := TypeCodeNew(tk_struct, 'Test_3',
-                        'Byte', TypeCodeNew(tk_octet),
-                        'Subrecord', TypeCodeNew(tk_struct, 'Test_4',
-                          'Byte', TypeCodeNew(tk_octet),
-                          'Byte', TypeCodeNew(tk_octet),
-                          'Integer', TypeCodeNew(tk_long),
-                        nil),
-                      nil);
+  MyTC := TypeCode.Create(tk_struct, ['Test_3',
+                            'VByte', TypeCode.Create(tk_octet),
+                            'VSubrecord', TypeCode.Create(tk_struct, ['Test_4',
+                              'VByte', TypeCode.Create(tk_octet),
+                              'VByte', TypeCode.Create(tk_octet),
+                              'VDouble', TypeCode.Create(tk_double)
+                            ])
+                          ]);
   WriteLn('Test_3 size: ', MyTC.Size);
   MyTC.Free;
 end;
@@ -143,12 +141,12 @@ end;
 Output on SOM 2.1:
 Test_1 size: 5
 Test_2 size: 6
-Test_3 size: 7
+Test_3 size: 11
 
 Output on SOM 3.0:
 Test_1 size: 8
 Test_2 size: 12
-Test_3 size: 12
+Test_3 size: 24
 *)
 
 ```
